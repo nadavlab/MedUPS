@@ -24,10 +24,8 @@ not included in this repo).
 ```
 1. SFT-CoT baseline       sft_training.py
                           -> LoRA fine-tune on (case, CoT, answer) triples
-2. GRPO reinforcement     grpo_training_new_code.py
-                          -> policy-gradient RL against an LLM-judge reward,
-                             either from the released base model or from an
-                             SFT-CoT checkpoint (see merge_sft_adapter.py)
+2. GRPO reinforcement     grpo_training.py
+                          -> policy-gradient RL against an LLM-judge reward
 3. Evaluation             eval_checkpoints.py / eval_ci_driver.py
                           (+ *_fewshot.py variants, eval_openai.py for frontier-API baselines)
 ```
@@ -36,9 +34,8 @@ not included in this repo).
 
 | File | Purpose |
 |---|---|
-| `grpo_training_new_code.py` | Core GRPO trainer (TRL `GRPOTrainer`). Defines the supported base-model families, prompt templates, LoRA config, the LLM-judge reward function, and per-family quirks (chat template, EOS handling, sampling params). Every other script in this repo imports shared pieces from here. |
-| `sft_training.py` | LoRA SFT baseline (TRL `SFTTrainer`) on CoT-labeled data, for direct comparison against GRPO-trained checkpoints of the same base model. Reuses `grpo_training_new_code.py`'s prompt construction so inputs are identical across SFT/GRPO/eval. |
-| `merge_sft_adapter.py` | Merges a trained SFT-CoT LoRA adapter into its base model's weights, producing a plain local checkpoint that can be used as the *starting point* for a subsequent GRPO run (chaining SFT → RL on the same base model). |
+| `grpo_training.py` | Core GRPO trainer (TRL `GRPOTrainer`). Defines the supported base-model families, prompt templates, LoRA config, the LLM-judge reward function, and per-family quirks (chat template, EOS handling, sampling params). Every other script in this repo imports shared pieces from here. |
+| `sft_training.py` | LoRA SFT baseline (TRL `SFTTrainer`) on CoT-labeled data, for direct comparison against GRPO-trained checkpoints of the same base model. Reuses `grpo_training.py`'s prompt construction so inputs are identical across SFT/GRPO/eval. |
 | `eval_checkpoints.py` | vLLM-backed zero-shot evaluator. Loads a base model once and swaps in LoRA checkpoints via `LoRARequest`; scores generations with an LLM judge. |
 | `eval_ci_driver.py` | Wraps `eval_checkpoints.py` over multiple random seeds/subsamples to report accuracy as a mean ± 95% confidence interval (Student's t). |
 | `eval_checkpoints_fewshot.py` / `eval_ci_driver_fewshot.py` | Few-shot (in-context demonstrations) counterparts of the above two. |
@@ -60,7 +57,7 @@ Create a `.env` file (loaded via `python-dotenv`) or export these directly:
 
 ```
 OPENAI_API_KEY=...      # frontier-model eval (eval_openai.py)
-DEEPSEEK_API_KEY=...    # LLM-judge reward calls (see grpo_training_new_code.py)
+DEEPSEEK_API_KEY=...    # LLM-judge reward calls (see grpo_training.py)
 ```
 
 ### Data layout
@@ -75,17 +72,18 @@ script's `--help` / module docstring):
   (fields: `clean text`, `final diagnosis`, plus a generated `final_answer`/`cot`
   once a checkpoint has run on it).
 
-Checkpoints are read from/written to `./checkpoints/`, merged models to `./models/`,
-and eval outputs to `./eval_results/` by default.
+Checkpoints are read from/written to `./checkpoints/`, and eval outputs to
+`./eval_results/` by default.
 
 ### Selecting a base model family
 
-Training/eval scripts read `GRPO_MODEL_FAMILY` (default `qwen`) to select the base
-model and its family-specific settings (LoRA target modules, chat template, EOS
-tokens, sampling params) — see the `_MODEL_NAMES` dict in `grpo_training_new_code.py`
-for the full list. To start GRPO from a merged SFT-CoT checkpoint instead of the
-released base weights, set `GRPO_MODEL_OVERRIDE=/path/to/merged/checkpoint` (produced
-by `merge_sft_adapter.py`).
+Training/eval scripts read `GRPO_MODEL_FAMILY` to select the base model and its
+family-specific settings (LoRA target modules, chat template, EOS tokens, sampling
+params). Three families are supported: `qwen` (Qwen3.5-9B, default), `huatuo`
+(HuatuoGPT-3-8B), and `qwen36` (Qwen3.6-27B) — see the `_MODEL_NAMES` dict in
+`grpo_training.py`. `GRPO_MODEL_OVERRIDE=/path/to/local/checkpoint` points a run at a
+local checkpoint instead of the family's released HF weights (e.g. to continue GRPO
+training from an already-trained SFT checkpoint).
 
 ## Usage
 
@@ -100,14 +98,7 @@ GRPO_MODEL_FAMILY=qwen python sft_training.py \
     --num-epochs 3 --learning-rate 1e-4
 
 # GRPO from the released base model
-GRPO_MODEL_FAMILY=qwen python grpo_training_new_code.py
-
-# GRPO starting from a merged SFT-CoT checkpoint
-python merge_sft_adapter.py \
-    --adapter ./checkpoints/sft-qwen/checkpoint-600 \
-    --output-dir ./models/qwen-sftcot-merged
-GRPO_MODEL_FAMILY=qwen GRPO_MODEL_OVERRIDE=./models/qwen-sftcot-merged \
-    python grpo_training_new_code.py
+GRPO_MODEL_FAMILY=qwen python grpo_training.py
 
 # Zero-shot eval with 95% CI
 GRPO_MODEL_FAMILY=qwen python eval_ci_driver.py \

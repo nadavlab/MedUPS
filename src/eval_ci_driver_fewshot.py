@@ -64,7 +64,7 @@ from eval_checkpoints import (  # noqa: E402
     setup_logging,
 )
 from eval_checkpoints_fewshot import evaluate_checkpoint_fewshot  # noqa: E402
-from grpo_training_new_code import load_jsonl_records  # noqa: E402
+from grpo_training import load_jsonl_records  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

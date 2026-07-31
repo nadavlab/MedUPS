@@ -47,7 +47,7 @@ from eval_checkpoints import (
     make_sampling_params,
     setup_logging,
 )
-from grpo_training_new_code import load_jsonl_records
+from grpo_training import load_jsonl_records
 
 logger = logging.getLogger(__name__)
 

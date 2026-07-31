@@ -3,7 +3,7 @@
 LoRA SFT baseline on train.jsonl, using TRL's SFTTrainer, for direct
 comparison against the GRPO-trained checkpoints of the same base models.
 
-Reuses grpo_training_new_code.py's MODEL/MODEL_FAMILY resolution,
+Reuses grpo_training.py's MODEL/MODEL_FAMILY resolution,
 build_messages() (the exact same system prompt + user template used by
 GRPO training and by every eval script), and per-family chat-template
 kwargs -- so the SFT *input* side is byte-identical to GRPO/eval. LoRA rank
@@ -108,7 +108,7 @@ def main() -> None:
     setup_logging(output_dir)
     logger.info("Args: %s", vars(args))
 
-    # Deferred imports: heavy (torch/transformers/trl), and grpo_training_new_code
+    # Deferred imports: heavy (torch/transformers/trl), and grpo_training
     # reads GRPO_MODEL_FAMILY / GRPO_LORA_R / GRPO_LORA_ALPHA from the environment
     # at import time -- must already be set by the launching sbatch before this.
     import torch
@@ -117,7 +117,7 @@ def main() -> None:
     from transformers import AutoTokenizer
     from trl import SFTConfig, SFTTrainer
 
-    from grpo_training_new_code import (
+    from grpo_training import (
         LORA_ALPHA,
         LORA_DROPOUT,
         LORA_R,

@@ -120,7 +120,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Reuse prompts + judges + extractors from the existing pipeline so numbers
 # stay directly comparable to eval_checkpoints.py output.
-from grpo_training_new_code import (
+from grpo_training import (
     _ANSWER_RE,
     _last_final_answer,
     build_ext_messages,

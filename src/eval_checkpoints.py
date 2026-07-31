@@ -42,7 +42,7 @@ from typing import Any, Optional
 # download+write there and crashes with EROFS. Redirect to a writable dir
 # (pre-seeded via symlink-mirror in the launching sbatch, see
 # FLASHINFER_CUBIN_WRITABLE_DIR) before anything transitively imports
-# flashinfer (trl/grpo_training_new_code pull it in even before the
+# flashinfer (trl/grpo_training pull it in even before the
 # explicit `from vllm import LLM` inside load_vllm_engine()). No-op for
 # every other family, which never sets this env var.
 _fi_writable = os.environ.get("FLASHINFER_CUBIN_WRITABLE_DIR")
@@ -51,7 +51,7 @@ if _fi_writable:
     flashinfer_cubin.get_cubin_dir = lambda: _fi_writable
 
 # Reuse prompts, judge client/retry, and helpers from the training script.
-from grpo_training_new_code import (
+from grpo_training import (
     JUDGE_MAX_TOKENS,
     JUDGE_MAX_WORKERS,
     JUDGE_MODEL,
@@ -67,7 +67,7 @@ from grpo_training_new_code import (
     evaluate_diagnosis,
     load_jsonl_records,
 )
-from grpo_training_new_code import _CHAT_TEMPLATE_KWARGS_BY_FAMILY, MODEL_FAMILY
+from grpo_training import _CHAT_TEMPLATE_KWARGS_BY_FAMILY, MODEL_FAMILY
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 logger = logging.getLogger(__name__)
@@ -97,13 +97,9 @@ GEN_TOP_K = int(os.environ.get("EVAL_GEN_TOP_K", "20"))
 SKIP_JUDGE = False
 
 THINKING_BUDGET_TOKENS = 6000
-# Per-family, not a flat constant: reuses grpo_training_new_code.py's own
-# _CHAT_TEMPLATE_KWARGS_BY_FAMILY (single source of truth with training) --
-# was previously hardcoded to Qwen's {"enable_thinking": True, "thinking_budget":
-# ...} unconditionally for every family, which is silently wrong for any
-# family whose template doesn't recognize those kwargs (e.g. openbiollm/
-# medreason have no such template variables at all; glm52 has its own native
-# reasoning-effort control and doesn't use Qwen's kwarg names).
+# Per-family, not a flat constant: reuses grpo_training.py's own
+# _CHAT_TEMPLATE_KWARGS_BY_FAMILY (single source of truth with training),
+# since not every family's chat template recognizes the same kwargs.
 CHAT_TEMPLATE_KWARGS = _CHAT_TEMPLATE_KWARGS_BY_FAMILY[MODEL_FAMILY]
 
 # --- vLLM engine defaults ---

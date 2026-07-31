@@ -75,7 +75,7 @@ from eval_checkpoints import (  # noqa: E402
     plot_results,
     vllm_chat,
 )
-from grpo_training_new_code import (  # noqa: E402
+from grpo_training import (  # noqa: E402
     JUDGE_MAX_WORKERS,
     MODEL,
     _answer_for_judge,
