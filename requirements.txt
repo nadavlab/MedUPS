@@ -1,0 +1,29 @@
+# Core ML stack. GRPO training and vLLM-backed evaluation require a CUDA GPU;
+# CoT generation / judging (data_generation scripts) are API-only and CPU-fine.
+torch>=2.6
+transformers>=5.12
+accelerate>=1.0
+peft>=0.19
+trl>=1.7
+datasets>=3.0
+
+# Fast rollout/inference backend used by GRPO training (colocated or server
+# mode) and by eval_checkpoints*.py.
+vllm>=0.24
+
+# Optional: fused GRPO-loss kernel (grpo_training_new_code.py,
+# GRPO_USE_LIGER_KERNEL=1). Not required by default.
+# liger-kernel
+
+# LLM-judge clients (OpenAI-compatible endpoints for GPT-4o / DeepSeek).
+openai>=1.0
+
+# Data / utilities
+pandas>=2.0
+tqdm>=4.66
+python-dotenv>=1.0
+tenacity>=8.2
+huggingface_hub>=0.25
+
+# Plotting (eval_checkpoints.py --all summary plot; optional)
+matplotlib>=3.8
