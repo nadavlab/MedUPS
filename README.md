@@ -2,7 +2,7 @@
 
 Training and evaluation code for reasoning-augmented clinical LLMs on two tasks:
 
-- **Case completion** ("midstream"): given a partial clinical case presentation, predict
+- **Next Step Prediction** ("midstream"): given a partial clinical case presentation, predict
   the next clinically relevant decision point (test, treatment, diagnosis, or finding).
 - **Final diagnosis prediction**: given a full case presentation, predict the patient's
   final diagnosis.
